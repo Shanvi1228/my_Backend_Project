@@ -1,0 +1,88 @@
+version: '3.9'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  collab-editor-backend:
+    build:
+      context: ./backend
+      dockerfile: collab-editor/Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/collabstack_editor
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  cloud-storage-backend:
+    build:
+      context: ./backend
+      dockerfile: cloud-storage/Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/collabstack_storage
+      DB_USERNAME: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  storage-node-1:
+    build: ./storage-node
+    ports:
+      - "9001:9001"
+    environment:
+      NODE_PORT: 9001
+      NODE_ID: node-1
+      DATA_DIR: /data/chunks
+    volumes:
+      - node1_data:/data/chunks
+
+  storage-node-2:
+    build: ./storage-node
+    ports:
+      - "9002:9001"
+    environment:
+      NODE_PORT: 9001
+      NODE_ID: node-2
+      DATA_DIR: /data/chunks
+    volumes:
+      - node2_data:/data/chunks
+
+  storage-node-3:
+    build: ./storage-node
+    ports:
+      - "9003:9001"
+    environment:
+      NODE_PORT: 9001
+      NODE_ID: node-3
+      DATA_DIR: /data/chunks
+    volumes:
+      - node3_data:/data/chunks
+
+volumes:
+  postgres_data:
+  node1_data:
+  node2_data:
+  node3_data:

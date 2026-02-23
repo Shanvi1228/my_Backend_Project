@@ -1,0 +1,47 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: collab-editor
+  autoconfigure:
+    exclude:
+      - org.springframework.ai.vectorstore.pgvector.autoconfigure.PgVectorStoreAutoConfiguration
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/collabstack_editor}
+    username: ${DB_USERNAME:collabstack}
+    password: ${DB_PASSWORD:changeme}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-placeholder-not-real-replace-for-ai-features}
+    vectorstore:
+      pgvector:
+        dimensions: 1536
+        index-type: HNSW
+        initialize-schema: true
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+app:
+  jwt:
+    secret: ${JWT_SECRET:collabstack-dev-only-jwt-secret-key-please-change-in-production-min64chars}
+    expiration-ms: 86400000
+  rag:
+    enabled: ${RAG_ENABLED:false}
