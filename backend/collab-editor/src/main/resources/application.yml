@@ -4,9 +4,9 @@ server:
 spring:
   application:
     name: collab-editor
-  autoconfigure:
-    exclude:
-      - org.springframework.ai.vectorstore.pgvector.autoconfigure.PgVectorStoreAutoConfiguration
+  main:
+    allow-bean-definition-overriding: true
+    lazy-initialization: false
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/collabstack_editor}
     username: ${DB_USERNAME:collabstack}
@@ -26,10 +26,21 @@ spring:
     baseline-on-migrate: true
   ai:
     openai:
-      api-key: ${OPENAI_API_KEY:sk-placeholder-not-real-replace-for-ai-features}
+      base-url: https://generativelanguage.googleapis.com/v1beta/openai
+      api-key: ${GEMINI_API_KEY:placeholder-replace-with-gemini-api-key}
+      chat:
+        completions-path: /chat/completions
+        options:
+          model: gemini-2.5-flash
+          temperature: 0.7
+      embedding:
+        embeddings-path: /embeddings
+        options:
+          model: gemini-embedding-001
+          dimensions: 768
     vectorstore:
       pgvector:
-        dimensions: 1536
+        dimensions: 768
         index-type: HNSW
         initialize-schema: true
 
@@ -44,4 +55,4 @@ app:
     secret: ${JWT_SECRET:collabstack-dev-only-jwt-secret-key-please-change-in-production-min64chars}
     expiration-ms: 86400000
   rag:
-    enabled: ${RAG_ENABLED:false}
+    enabled: ${RAG_ENABLED:true}

@@ -29,8 +29,16 @@ public class SpringAiConfig {
     @Bean
     @ConditionalOnProperty(name = "app.rag.enabled", havingValue = "true")
     public VectorStore vectorStore(EmbeddingModel embeddingModel, JdbcTemplate jdbcTemplate) {
+        try {
+            // Try to enable pgvector extension if not already enabled
+            jdbcTemplate.execute("CREATE EXTENSION IF NOT EXISTS vector");
+        } catch (Exception e) {
+            throw new IllegalStateException(
+                "pgvector extension is not installed. Please install pgvector: " +
+                "https://github.com/pgvector/pgvector#installation", e);
+        }
         return PgVectorStore.builder(jdbcTemplate, embeddingModel)
-                .dimensions(1536)
+                .dimensions(768)
                 .initializeSchema(true)
                 .build();
     }
